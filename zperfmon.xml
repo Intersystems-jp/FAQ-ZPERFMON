@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="Cache" version="24">
+<Routine name="ZPERFMON" type="INT" languagemode="0"><![CDATA[
+ZPERFMON	;
+	Quit
+	;
+	;Do Collect^ZPERFMON(.proc,.rou,.glo,.database,.net)
+	; dir : 出力ファイルディレクトリ　
+	; 		ファイル名　ZPERFMONyyyymmddhhmmss_GG.csv
+	; 		ファイル名　ZPERFMONyyyymmddhhmmss_GR.csv
+	; 		ファイル名　ZPERFMONyyyymmddhhmmss_GP.csv
+	; proc : プロセス数
+	; rou : ルーチン数　
+	; glo : グローバル数
+	; database : データベース数
+	; net :	ネットワークノード数	
+	; 
+	;Do Stop^ZPERFMON(.dir)
+	;
+Collect(proc,rou,glo,database,net)	;
+ 	If '$d(proc) s proc=100
+ 	If '$d(rou) s rou=100
+ 	If '$d(glo) s glo=100
+ 	If '$d(database) s database=100
+ 	If '$d(net) s net=5
+ 	Set status=$$Start^PERFMON(proc,rou,glo,database,net)
+ 	Set status=$$Clear^PERFMON() 
+ 	Quit
+Stop(dir)	;
+ 	If '$d(dir) s dir="c:\ISC"	
+	Set Date=$$CurDate,Time=$$CurTime  	
+  	Set file=dir_"\ZPERFMON"_Date_Time  
+    Set status=$$Report^PERFMON("G","G","D",file_"GG.csv")
+    Set status=$$Report^PERFMON("G","R","D",file_"GR.csv")
+    Set status=$$Report^PERFMON("G","P","D",file_"GP.csv") 
+	Set status=$$Stop^PERFMON() 
+	Quit 
+CurDate()
+	New
+	Do INT^%D
+	Set %DAT=$ZConvert(%DAT,"U")
+	Set MonthName=$Extract(%DAT,1,3)
+	Set Day=+$Piece(%DAT," ",2) If Day?1n Set Day=0_Day
+	Set Year=+$Piece(%DAT," ",3) If Year?2n Set Year=2000+Year
+	Set Month=$Find("JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC",MonthName)\3 If Month?1n Set Month=0_Month
+	Quit Year_Month_Day
+CurTime()
+	New
+	Do INT^%T
+	Set %TIM=$ZConvert(%TIM,"U")    
+	For  Quit:%TIM'?1" ".e  Set %TIM=$Extract(%TIM,2,99999)
+	Set Time=$Piece(%TIM," ",1),AMPM=$Piece(%TIM," ",2)
+	Set Hour=+$Piece(Time,":",1),Minutes=+$Piece(Time,":",2)
+	If AMPM="AM",Hour=12 Set Hour=0
+	If AMPM="PM",Hour'=12 Set Hour=Hour+12
+	If Hour?1n Set Hour=0_Hour
+	If Minutes?1n Set Minutes=0_Minutes
+	Set Sec=$P($ZDATETIME($H,,1),":",3)
+	Quit Hour_Minutes_Sec
+	
+]]></Routine>
+</Export>
